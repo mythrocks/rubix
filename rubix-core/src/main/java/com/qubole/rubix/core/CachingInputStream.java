@@ -119,6 +119,7 @@ public class CachingInputStream
 
     private void initialize(Configuration conf, BookKeeperFactory bookKeeperFactory)
     {
+        log.error("CALEB: CachingInputStream::init() for localPath:" + localPath + "\tRemotePath:" + remotePath);
         this.conf = conf;
         this.strictMode = CacheConfig.isStrictMode(conf);
         try {
@@ -137,6 +138,7 @@ public class CachingInputStream
         File file = new File(localPath);
         if (!file.exists()) {
             try {
+                log.error("CALEB: CachingInputStream::init() creating new file: " + localPath);
                 file.createNewFile();
             }
             catch (IOException e) {
@@ -151,6 +153,7 @@ public class CachingInputStream
 
     private FSDataInputStream getParentDataInputStream() throws IOException
     {
+        log.error("CALEB: CachingInputStream::getParentDataInputStream()! RemotePath: " + remotePath);
         if (inputStream == null) {
             inputStream = remoteFileSystem.open(new Path(remotePath), bufferSize);
         }
@@ -194,6 +197,7 @@ public class CachingInputStream
     public int read(byte[] buffer, int offset, int length)
             throws IOException
     {
+        log.error("CALEB: CachingInputStream::read() for localPath:" + this.localPath + "\tRemotePath: " + this.remotePath);
         try {
             return readInternal(buffer, offset, length);
         }
@@ -302,6 +306,7 @@ public class CachingInputStream
             long endBlock,
             int length) throws IOException
     {
+        log.error("CALEB: CachingInputStream::setupReadRequestChain(): remotePath:" + remotePath + "\tfileSize:" + fileSize);
         DirectReadRequestChain directReadRequestChain = null;
         RemoteReadRequestChain remoteReadRequestChain = null;
         CachedReadRequestChain cachedReadRequestChain = null;
@@ -312,8 +317,10 @@ public class CachingInputStream
         List<BlockLocation> isCached = null;
 
         try {
+            log.error("CALEB: CachingInputStream::setupReadRequestChain(): bookKeeperClient: " + bookKeeperClient);
             if (bookKeeperClient != null) {
                 isCached = bookKeeperClient.getCacheStatus(remotePath, fileSize, lastModified, nextReadBlock, endBlock, clusterType.ordinal());
+                System.out.println("CALEB: CachingInputStream::setupReadRequestChain(): isCached: " + isCached);
             }
         }
         catch (Exception e) {
@@ -328,7 +335,7 @@ public class CachingInputStream
             long backendReadStart = blockNum * blockSize;
             long backendReadEnd = (blockNum + 1) * blockSize;
 
-            // if backendReadStart is after EOF, then return. It can happen while reading last block and enf of read covers multiple blocks after EOF
+            // if backendReadStart is after EOF, then return. It can happen while reading last block and end of read covers multiple blocks after EOF
             if (backendReadStart >= fileSize) {
                 log.debug("Reached EOF, returning");
                 break;

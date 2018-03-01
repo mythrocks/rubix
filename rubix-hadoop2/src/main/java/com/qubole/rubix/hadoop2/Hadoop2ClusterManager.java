@@ -86,6 +86,7 @@ public class Hadoop2ClusterManager
                             HttpURLConnection httpcon = (HttpURLConnection) obj.openConnection();
                             httpcon.setRequestMethod("GET");
                             log.debug("Sending 'GET' request to URL: " + obj.toString());
+                            log.error("CALEB: Sending 'GET' request to URL: " + obj.toString(), new Exception("Stack-trace"));
                             int responseCode = httpcon.getResponseCode();
                             if (responseCode == HttpURLConnection.HTTP_OK) {
                                 BufferedReader in = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));

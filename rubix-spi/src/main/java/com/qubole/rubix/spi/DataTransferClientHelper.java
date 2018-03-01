@@ -12,6 +12,8 @@
  */
 package com.qubole.rubix.spi;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,6 +26,8 @@ import java.nio.channels.SocketChannel;
  */
 public class DataTransferClientHelper
 {
+    private static final Log log = LogFactory.getLog(DataTransferClientHelper.class);
+
     private DataTransferClientHelper()
     {
     }
@@ -31,6 +35,7 @@ public class DataTransferClientHelper
     public static SocketChannel createDataTransferClient(String remoteNodeName, Configuration conf)
             throws IOException
     {
+        log.error("CALEB: DataTransferClientHelper::createDataTransferClient(): remoteNodeName: " + remoteNodeName + " localPort: " + CacheConfig.getLocalServerPort(conf));
         SocketAddress sad = new InetSocketAddress(remoteNodeName, CacheConfig.getLocalServerPort(conf));
         SocketChannel sc = SocketChannel.open();
         sc.socket().setSoTimeout(CacheConfig.getSocketReadTimeOutDefault(conf));

@@ -44,7 +44,7 @@
 
     <properties>
         <main.basedir>${project.basedir}</main.basedir>
-        <dep.presto.version>0.142</dep.presto.version>
+        <dep.presto.version>0.191</dep.presto.version>
         <dep.airlift.version>0.98</dep.airlift.version>
         <commons-httpclient.version>3.0.1</commons-httpclient.version>
         <dep.hadoop1.version>1.2.0</dep.hadoop1.version>
@@ -61,6 +61,7 @@
         <module>rubix-tests</module>
         <module>assembly</module>
         <module>rubix-rpm</module>
+        <module>rubix-hybrid</module>
     </modules>
 
     <dependencyManagement>

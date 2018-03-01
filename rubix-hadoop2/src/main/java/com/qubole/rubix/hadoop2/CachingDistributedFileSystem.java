@@ -14,7 +14,6 @@
 package com.qubole.rubix.hadoop2;
 
 import com.qubole.rubix.core.CachingFileSystem;
-import com.qubole.rubix.spi.ClusterManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -26,13 +25,14 @@ import java.net.URI;
 public class CachingDistributedFileSystem extends CachingFileSystem<DistributedFileSystem>
 {
   private static final Log LOG = LogFactory.getLog(CachingDistributedFileSystem.class);
-  private ClusterManager clusterManager;
+  private Hadoop2ClusterManager clusterManager;
   private static final String SCHEME = "hdfs";
 
   @Override
   public void initialize(URI uri, Configuration conf) throws IOException
   {
-    LOG.debug("Initializing DistributedFileSystem - Hadoop2");
+    LOG.info("CALEB: Initializing CachingDistributedFileSystem with " + uri);
+    LOG.debug("Initializing DistributedFileSystem - Hadoop2 with uri == " + uri);
     if (clusterManager == null) {
       initializeClusterManager(conf);
     }
@@ -52,5 +52,9 @@ public class CachingDistributedFileSystem extends CachingFileSystem<DistributedF
     }
     clusterManager = new Hadoop2ClusterManager();
     clusterManager.initialize(conf);
+  }
+
+  public Hadoop2ClusterManager getClusterManager() {
+    return clusterManager;
   }
 }

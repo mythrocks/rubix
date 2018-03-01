@@ -12,7 +12,7 @@
  */
 package com.qubole.rubix.presto;
 
-import com.facebook.presto.hive.PrestoS3FileSystem;
+import com.facebook.presto.hive.s3.PrestoS3FileSystem;
 import com.qubole.rubix.core.CachingFileSystem;
 import org.apache.hadoop.conf.Configuration;
 
@@ -24,7 +24,7 @@ import java.net.URI;
  */
 public class CachingPrestoS3FileSystem extends CachingFileSystem<PrestoS3FileSystem>
 {
-    private static PrestoClusterManager clusterManager = null;
+    private PrestoClusterManager clusterManager = null;
 
     public CachingPrestoS3FileSystem()
     {
@@ -54,5 +54,9 @@ public class CachingPrestoS3FileSystem extends CachingFileSystem<PrestoS3FileSys
             clusterManager = new PrestoClusterManager();
             clusterManager.initialize(conf);
         }
+    }
+
+    public PrestoClusterManager getClusterManager() {
+        return clusterManager;
     }
 }

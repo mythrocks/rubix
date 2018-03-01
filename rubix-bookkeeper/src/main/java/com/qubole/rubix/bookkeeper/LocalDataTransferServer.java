@@ -154,7 +154,7 @@ public class LocalDataTransferServer extends Configured implements Tool
         public void run()
         {
             try {
-                log.debug("Connected to node - " + localDataTransferClient.getLocalAddress());
+                log.info("Connected to node - " + localDataTransferClient.getLocalAddress());
                 BookKeeperFactory bookKeeperFactory = new BookKeeperFactory();
                 ByteBuffer dataInfo = ByteBuffer.allocate(CacheConfig.getMaxHeaderSize(conf));
 
@@ -168,7 +168,7 @@ public class LocalDataTransferServer extends Configured implements Tool
                 long offset = header.getOffset();
                 int readLength = header.getReadLength();
                 String remotePath = header.getFilePath();
-                log.debug(String.format("Trying to read from %s at offset %d and length %d for client %s", remotePath, offset, readLength, localDataTransferClient.getRemoteAddress()));
+                log.info(String.format("Trying to read from %s at offset %d and length %d for client %s", remotePath, offset, readLength, localDataTransferClient.getRemoteAddress()));
                 try {
                     this.bookKeeperClient = bookKeeperFactory.createBookKeeperClient(conf);
                 }
@@ -201,7 +201,7 @@ public class LocalDataTransferServer extends Configured implements Tool
                     bookKeeperClient.close();
                 }
                 fc.close();
-                log.debug(String.format("Done reading %d from %s at offset %d and length %d for client %s", nread, remotePath, offset, readLength, localDataTransferClient.getRemoteAddress()));
+                log.info(String.format("Done reading %d bytes from %s (using local file %s) at offset %d and length %d for client %s", nread, remotePath, filename, offset, readLength, localDataTransferClient.getRemoteAddress()));
             }
             catch (Exception e) {
                 try {

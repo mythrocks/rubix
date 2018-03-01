@@ -80,8 +80,8 @@ public class PrestoClusterManager extends ClusterManager
                         if (!isMaster) {
                             // First time all nodes start assuming themselves as master and down the line figure out their role
                             // Next time onwards, only master will be fetching the list of nodes
-                            return ImmutableList.of();
-                        }
+                            // HACK: Return at least the current node, for worker-mode.
+                            return Collections.singletonList(InetAddress.getLocalHost().getHostAddress());                       }
 
                         try {
                             URL allNodesRequest = getNodeUrl();
@@ -91,11 +91,14 @@ public class PrestoClusterManager extends ClusterManager
                             allHttpCon.setConnectTimeout(500); //ms
                             allHttpCon.setRequestMethod("GET");
 
+                            log.error("CALEB: PrestoClusterManager::initialize()::CacheLoader::load(): Fetching allNodes with: " + allNodesRequest);
+
                             int allNodesResponseCode = allHttpCon.getResponseCode();
 
                             StringBuffer allResponse = new StringBuffer();
                             StringBuffer failedResponse = new StringBuffer();
                             try {
+                                log.error("CALEB: PrestoClusterManager::initialize()::CacheLoader::load(): Response == " + allNodesResponseCode);
                                 if (allNodesResponseCode == HttpURLConnection.HTTP_OK) {
                                     isMaster = true;
                                     BufferedReader in = new BufferedReader(new InputStreamReader(allHttpCon.getInputStream()));
@@ -113,9 +116,10 @@ public class PrestoClusterManager extends ClusterManager
                                     }
                                 }
                                 else {
-                                    log.info(String.format("v1/node failed with code: setting this node as worker "));
+                                    log.info("v1/node failed with code: setting this node as worker ");
                                     isMaster = false;
-                                    return ImmutableList.of();
+                                    // HACK: Return at least the current node, for worker-mode.
+                                    return Collections.singletonList(InetAddress.getLocalHost().getHostAddress());
                                 }
                             }
                             catch (IOException e) {
@@ -159,9 +163,10 @@ public class PrestoClusterManager extends ClusterManager
 
                             List<Stats> allNodes = gson.fromJson(allResponse.toString(), type);
                             List<Stats> failedNodes = gson.fromJson(failedResponse.toString(), type);
-                            if (allNodes.isEmpty()) {
+                            if (allNodes == null || allNodes.isEmpty()) {
                                 // Empty result set => server up and only master node running, return localhost has the only node
                                 // Do not need to consider failed nodes list as 1node cluster and server is up since it replied to allNodesRequest
+                                log.error("CALEB: PrestoClusterManager::initialize()::CacheLoader::load(): Returning only localhost! isMaster == " + isMaster);
                                 return ImmutableList.of(InetAddress.getLocalHost().getHostAddress());
                             }
 
@@ -177,10 +182,10 @@ public class PrestoClusterManager extends ClusterManager
                             for (Stats node : allNodes) {
                                 hosts.add(node.getUri().getHost());
                             }
-                            if (hosts.isEmpty()) {
-                                // case of master only cluster
-                                hosts.add(InetAddress.getLocalHost().getHostAddress());
-                            }
+
+                            // Hack! Include the current node, since the master doesn't list itself.
+                            hosts.add(InetAddress.getLocalHost().getHostAddress());
+
                             List<String> hostList = Lists.newArrayList(hosts.toArray(new String[0]));
                             Collections.sort(hostList);
                             return hostList;
@@ -227,7 +232,9 @@ public class PrestoClusterManager extends ClusterManager
     public List<String> getNodes()
     {
         try {
-            return nodesCache.get("nodeList");
+            List<String> nodeList = nodesCache.get("nodeList");
+            log.error("CALEB: PrestoClusterManager::getNodes(): Returning: " + nodeList);
+            return nodeList;
         }
         catch (ExecutionException e) {
             log.info("Error fetching node list : ", e);

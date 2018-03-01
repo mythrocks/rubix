@@ -51,7 +51,7 @@ public abstract class CachingFileSystem<T extends FileSystem> extends FileSystem
 {
     private static final Log log = LogFactory.getLog(CachingFileSystem.class);
     private T fs = null;
-    private static ClusterManager clusterManager;
+    private ClusterManager clusterManager;
 
     private boolean cacheSkipped = false;
     private boolean isRubixSchemeUsed = false;
@@ -124,13 +124,17 @@ public abstract class CachingFileSystem<T extends FileSystem> extends FileSystem
     public FSDataInputStream open(Path path, int bufferSize)
             throws IOException
     {
+        log.error("CALEB: Opening path: " + path);
         FSDataInputStream inputStream = null;
 
         if (skipCache(path, getConf())) {
+            log.error("CALEB: Skipping cache for path " + path);
             inputStream = fs.open(path, bufferSize);
             cacheSkipped = true;
             return inputStream;
         }
+
+        log.error("CALEB: Reading from cache for " + path);
 
         Path originalPath = new Path(getOriginalURI(path.toUri()).getScheme(), path.toUri().getAuthority(),
             path.toUri().getPath());
@@ -250,6 +254,8 @@ public abstract class CachingFileSystem<T extends FileSystem> extends FileSystem
         try {
             if (!clusterManager.isMaster() || cacheSkipped) {
                 // If in worker node, blockLocation does not matter
+                log.error("CALEB: CachingFileSystem::getFileBlockLocations(): Returning underlying block-locations! " +
+                    "clusterManager.isMaster()==" + clusterManager.isMaster() + " cacheSkipped==" + cacheSkipped);
                 return fs.getFileBlockLocations(file, start, len);
             }
         }
@@ -261,10 +267,12 @@ public abstract class CachingFileSystem<T extends FileSystem> extends FileSystem
         List<String> nodes = clusterManager.getNodes();
 
         if (nodes == null) {
+            log.error("CALEB: CachingFS::getFileBlockLocations(): nodes == null");
             return fs.getFileBlockLocations(file, start, len);
         }
 
         if (file == null) {
+            log.error("CALEB: CachingFS::getFileBlockLocations(): file == null");
             return null;
         }
         else if (start >= 0L && len >= 0L) {
@@ -289,6 +297,7 @@ public abstract class CachingFileSystem<T extends FileSystem> extends FileSystem
                     String[] host = new String[]{nodes.get(nodeIndex)};
                     blockLocations[blockNumber++] = new BlockLocation(name, host, i, end - i);
                     log.info(String.format("BlockLocation %s %d %d %s totalHosts: %s", file.getPath().toString(), i, end - i, host[0], nodes.size()));
+                    log.info("CALEB: getFileBlockLocations(): Hashing {file=" + file.getPath() + " offset=" + i + " end=" + end + "} to host=" + nodes.get(nodeIndex));
                 }
 
                 return blockLocations;

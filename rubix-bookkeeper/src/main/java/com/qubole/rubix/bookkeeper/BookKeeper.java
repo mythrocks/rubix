@@ -25,6 +25,7 @@ import com.google.common.hash.Hashing;
 import com.qubole.rubix.core.ReadRequest;
 import com.qubole.rubix.core.RemoteReadRequestChain;
 import com.qubole.rubix.hadoop2.Hadoop2ClusterManager;
+import com.qubole.rubix.hybrid.HybridPrestoHdfsClusterManager;
 import com.qubole.rubix.presto.PrestoClusterManager;
 import com.qubole.rubix.spi.BlockLocation;
 import com.qubole.rubix.spi.BookKeeperFactory;
@@ -54,6 +55,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.qubole.rubix.spi.ClusterType.HADOOP2_CLUSTER_MANAGER;
+import static com.qubole.rubix.spi.ClusterType.HYBRID_PRESTO_HDFS_CLUSTER_MANAGER;
 import static com.qubole.rubix.spi.ClusterType.PRESTO_CLUSTER_MANAGER;
 import static com.qubole.rubix.spi.ClusterType.TEST_CLUSTER_MANAGER;
 
@@ -88,9 +90,10 @@ public class BookKeeper
     public List<BlockLocation> getCacheStatus(String remotePath, long fileLength, long lastModified, long startBlock, long endBlock, int clusterType)
             throws TException
     {
+        log.error("CALEB: BookKeeper::getCacheStatus(). nodes == " + nodes);
         initializeClusterManager(clusterType);
         if (nodeName == null) {
-            log.error("Node name is null for Cluster Type" + ClusterType.findByValue(clusterType));
+            log.error("Node name is null for Cluster Type " + ClusterType.findByValue(clusterType));
             return null;
         }
 
@@ -184,11 +187,15 @@ public class BookKeeper
                         return;
                     }
                     else {
+                        log.error("CALEB: clusterType: " + clusterType);
                         if (clusterType == HADOOP2_CLUSTER_MANAGER.ordinal()) {
                             clusterManager = new Hadoop2ClusterManager();
                         }
                         else if (clusterType == PRESTO_CLUSTER_MANAGER.ordinal()) {
                             clusterManager = new PrestoClusterManager();
+                        }
+                        else if (clusterType == HYBRID_PRESTO_HDFS_CLUSTER_MANAGER.ordinal()) {
+                            clusterManager = new HybridPrestoHdfsClusterManager();
                         }
 
                         clusterManager.initialize(conf);
